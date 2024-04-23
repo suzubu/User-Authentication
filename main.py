@@ -8,28 +8,24 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, cur
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret-key-goes-here'
 
-
 # CREATE DATABASE
 class Base(DeclarativeBase):
     pass
-
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)
 
-#CONFIGURE FLASK-LOGIN'S LOGIN MANAGER
+# Configure Flask-Login's Login Manager
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-
-#CREATE A USER_LOADER CALLBACK
+# Create a user_loader callback
 @login_manager.user_loader
 def load_user(user_id):
     return db.get_or_404(User, user_id)
 
 
-# CREATE TABLE IN DB w/ UserMixin
+# CREATE TABLE IN DB with the UserMixin
 class User(UserMixin, db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(String(100), unique=True)
@@ -54,7 +50,6 @@ def register():
             method='pbkdf2:sha256',
             salt_length=8
         )
-
         new_user = User(
             email=request.form.get('email'),
             name=request.form.get('name'),
@@ -64,36 +59,39 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        #login and authenticate user after adding detail to database:
+        # Log in and authenticate user after adding details to database.
         login_user(new_user)
-        #can redirect and get the name from the current use
-        return render_template("secrets.html", name=request.form.get('name').capitalize())
+
+        # Can redirect() and get name from the current_user
+        return redirect(url_for("secrets"))
+
     return render_template("register.html")
 
 
-@app.route('/login', methods = ["GET", "POST"])
+@app.route('/login', methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         email = request.form.get('email')
         password = request.form.get('password')
 
-        #find user by email
+        # Find user by email entered.
         result = db.session.execute(db.select(User).where(User.email == email))
         user = result.scalar()
 
-        #check stored password hash against entered password hashed
+        # Check stored password hash against entered password hashed.
         if check_password_hash(user.password, password):
             login_user(user)
-            return redirect(url_for('secrets.html'))
+            return redirect(url_for('secrets'))
 
     return render_template("login.html")
 
-#only logged-in users can access route
+
+# Only logged-in users can access the route
 @app.route('/secrets')
 @login_required
 def secrets():
     print(current_user.name)
-    #passing the name from the current user
+    # Passing the name from the current_user
     return render_template("secrets.html", name=current_user.name)
 
 
@@ -102,7 +100,8 @@ def logout():
     logout_user()
     return redirect(url_for('home'))
 
-#only logged in users can download the document
+
+# Only logged-in users can down download the pdf
 @app.route('/download')
 @login_required
 def download():

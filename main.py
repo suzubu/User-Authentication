@@ -11,7 +11,7 @@ app.config['SECRET_KEY'] = 'secret-key-goes-here'
 # CREATE DATABASE
 class Base(DeclarativeBase):
     pass
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)
 
@@ -41,8 +41,8 @@ def register():
         )
         db.session.add(new_user)
         db.session.commit()
-        #passing over the user's name
-        return render_template("secrets.html", name=request.form.get('name'))
+        #passing over the user's name w
+        return render_template("secrets.html", name=request.form.get('name').capitalize())
     return render_template("register.html")
 
 
@@ -63,7 +63,7 @@ def logout():
 
 @app.route('/download')
 def download():
-    pass
+    return send_from_directory('static', path="files/cheat_sheet.pdf")
 
 
 if __name__ == "__main__":

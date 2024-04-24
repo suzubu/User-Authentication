@@ -76,12 +76,16 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
 
-        # Find user by email entered.
         result = db.session.execute(db.select(User).where(User.email == email))
         user = result.scalar()
 
-        # Check stored password hash against entered password hashed.
-        if check_password_hash(user.password, password):
+        if not user:
+            flash("The emaikl does not exist, please try again")
+            return redirect(url_for('login'))
+        elif not check_password_hash(user.password, password):
+            flash("Password incorrect, please try again")
+            return redirect(url_for('login'))
+        else:
             login_user(user)
             return redirect(url_for('secrets'))
 

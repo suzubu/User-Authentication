@@ -46,7 +46,7 @@ def home():
 def register():
     if request.method == "POST":
         email = request.form.get("email")
-        result = db.session.execute(db.select(User).where.User.email==email)
+        result = db.session.execute(db.select(User).where(User.email == email))
         user = result.scalar()
         if user:
             #already exists
